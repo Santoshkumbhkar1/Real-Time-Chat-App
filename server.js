@@ -30,17 +30,22 @@ app.get("/", (req, res) => res.send("Real-Time Chat Server is running!"));
 
 // WebSocket Connection
 io.on("connection", (socket) => {
-    console.log(`⚡ New client connected: ${socket.id}`);
-
     socket.on("sendMessage", async ({ sender, content }) => {
-        const newMessage = new Message({ sender, content });
-        await newMessage.save();
-        io.emit("receiveMessage", newMessage);
-    });
+        try {
+            const newMessage = new Message({ sender, content });
+            await newMessage.save();
+            io.emit("receiveMessage", newMessage);
+        } catch (error) {
+            // Silent error handling in production
+            if (process.env.NODE_ENV === "development") {
+                console.error("Error saving message:", error.message);
+            };
 
-    socket.on("disconnect", () => console.log("❌ Client disconnected"));
+        }});
+
+        socket.on("disconnect", () => {});
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT);
 
